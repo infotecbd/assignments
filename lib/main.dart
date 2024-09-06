@@ -8,14 +8,17 @@ void main() {
 
 class CartItem {
   final String name;
+  final String size;
   final String imageUrl;
   final int price;
   int quantity;
 
   CartItem({
     required this.name,
+    required this.size,
     required this.imageUrl,
     required this.price,
+
     this.quantity = 1,
   });
 }
@@ -31,16 +34,19 @@ class _CartScreenState extends State<CartScreen> {
   List<CartItem> cartItems = [
     CartItem(
       name: "Nike Air Max Tailwind IV SP",
+      size: "M",
       imageUrl: "https://storage.apex4u.com/5680632b-2141-4cae-9060-09e0f52d5eb5.jpg",
       price: 12000,
     ),
     CartItem(
       name: "Adidas UltraBoost",
+      size: "XL",
       imageUrl: "https://storage.apex4u.com/5680632b-2141-4cae-9060-09e0f52d5eb5.jpg",
       price: 15000,
     ),
     CartItem(
       name: "Puma RS-X",
+      size: "L",
       imageUrl: "https://storage.apex4u.com/5680632b-2141-4cae-9060-09e0f52d5eb5.jpg",
       price: 8000,
     ),
