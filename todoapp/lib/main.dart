@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 void main() {
   runApp(MyApp());
@@ -9,7 +11,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Simple To-Do App',
+      title: 'API To-Do App Assignment',
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
@@ -24,32 +26,80 @@ class TodoApp extends StatefulWidget {
 }
 
 class _TodoAppState extends State<TodoApp> {
-  final List<String> _todoList = [];
+  List<String> _todoList = [];
   final TextEditingController _textFieldController = TextEditingController();
+  final String apiUrl = 'https://task.teamrabbil.com/api/v1';
 
-  // Function to add a new task
-  void _addTodoItem(String task) {
-    setState(() {
-      _todoList.add(task);
-    });
+  @override
+  void initState() {
+    super.initState();
+    _fetchTodos();
+  }
+
+  // Function to fetch tasks from the API
+  Future<void> _fetchTodos() async {
+    final response = await http.get(Uri.parse(apiUrl));
+
+    if (response.statusCode == 200) {
+      setState(() {
+        _todoList = List<String>.from(json.decode(response.body));
+      });
+    } else {
+      throw Exception('Failed to load tasks');
+    }
+  }
+
+
+  Future<void> _addTodoItem(String task) async {
+    final response = await http.post(
+      Uri.parse(apiUrl),
+      headers: {"Content-Type": "application/json"},
+      body: json.encode({'task': task}),
+    );
+
+    if (response.statusCode == 201) {
+      setState(() {
+        _todoList.add(task);
+      });
+    } else {
+      throw Exception('Failed to add task');
+    }
     _textFieldController.clear();
   }
 
-  // Function to edit an existing task
-  void _editTodoItem(int index, String newTask) {
-    setState(() {
-      _todoList[index] = newTask;
-    });
+
+  Future<void> _editTodoItem(int index, String newTask) async {
+    final String taskUrl = '$apiUrl/${index + 1}';
+    final response = await http.put(
+      Uri.parse(taskUrl),
+      headers: {"Content-Type": "application/json"},
+      body: json.encode({'task': newTask}),
+    );
+
+    if (response.statusCode == 200) {
+      setState(() {
+        _todoList[index] = newTask;
+      });
+    } else {
+      throw Exception('Failed to edit task');
+    }
   }
 
-  // Function to remove a task
-  void _removeTodoItem(int index) {
-    setState(() {
-      _todoList.removeAt(index);
-    });
+
+  Future<void> _removeTodoItem(int index) async {
+    final String taskUrl = '$apiUrl/${index + 1}'; // Assuming tasks are 1-indexed in the API
+    final response = await http.delete(Uri.parse(taskUrl));
+
+    if (response.statusCode == 200) {
+      setState(() {
+        _todoList.removeAt(index);
+      });
+    } else {
+      throw Exception('Failed to delete task');
+    }
   }
 
-  // Function to display a dialog for adding a new task
+
   Future<void> _displayAddDialog(BuildContext context) async {
     return showDialog(
       context: context,
@@ -76,9 +126,9 @@ class _TodoAppState extends State<TodoApp> {
     );
   }
 
-  // Function to display a dialog for editing a task
+  // Display dialog for editing a task
   Future<void> _displayEditDialog(BuildContext context, int index) async {
-    _textFieldController.text = _todoList[index]; // Set initial value to the current task
+    _textFieldController.text = _todoList[index];
     return showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -108,7 +158,7 @@ class _TodoAppState extends State<TodoApp> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('To-Do App Assignment'),
+        title: Text('API To-Do App'),
       ),
       body: ListView.builder(
         itemCount: _todoList.length,
@@ -121,11 +171,11 @@ class _TodoAppState extends State<TodoApp> {
                 children: [
                   IconButton(
                     icon: Icon(Icons.edit),
-                    onPressed: () => _displayEditDialog(context, index), // Edit button
+                    onPressed: () => _displayEditDialog(context, index),
                   ),
                   IconButton(
                     icon: Icon(Icons.delete),
-                    onPressed: () => _removeTodoItem(index), // Delete button
+                    onPressed: () => _removeTodoItem(index),
                   ),
                 ],
               ),
@@ -134,7 +184,7 @@ class _TodoAppState extends State<TodoApp> {
         },
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => _displayAddDialog(context), // Add new task
+        onPressed: () => _displayAddDialog(context),
         child: Icon(Icons.add),
       ),
     );
